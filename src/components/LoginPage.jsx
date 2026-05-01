@@ -1,4 +1,5 @@
 import { useState } from "react";
+import logo from "../../majalis store.png";
 
 const ADMIN_EMAIL = "admin@majalis.sn";
 const ADMIN_PASSWORD = "Majalis2003@";
@@ -64,10 +65,14 @@ export default function LoginPage({ onLogin }) {
       <div className="login-deco" style={{ bottom: -80, right: -80 }} />
       <div className="login-card">
         <div className="login-logo">
+          <div className="login-logo-image-wrapper" aria-hidden="true">
+            <img src={logo} alt="Majalis Store" className="login-logo-image" />
+          </div>
           <div className="logo-text">MAJALIS STORE</div>
           <div className="logo-sub" style={{ textAlign: "center", marginTop: 4 }}>
             Espace {showReg ? "Inscription" : "Connexion"}
           </div>
+          <div className="logo-tagline">Mode dynamique & élégance instantanée</div>
         </div>
         {!showReg ? (
           <>
