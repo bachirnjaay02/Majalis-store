@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import logo from "../majalis-store.png";
 import LoginPage from "./components/LoginPage.jsx";
 import Dashboard from "./components/Dashboard.jsx";
 import StockPage from "./components/StockPage.jsx";
@@ -103,7 +104,7 @@ export default function App() {
                 color: "var(--black)",
               }}
             >
-              <img style={{ width:50, height:50 }} src="majalis store.png" alt="Logo Majalis Store" />
+              <img style={{ width:50, height:50 }} src={logo} alt="Logo Majalis Store" />
             </div>
             <div>
               <div className="logo-text" style={{ fontSize: 16 }}>MAJALIS</div>

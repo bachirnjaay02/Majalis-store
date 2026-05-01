@@ -1,5 +1,5 @@
 import { useState } from "react";
-import logo from "../../majalis store.png";
+import logo from "../../majalis-store.png";
 
 const ADMIN_EMAIL = "admin@majalis.sn";
 const ADMIN_PASSWORD = "Majalis2003@";
@@ -10,9 +10,6 @@ export default function LoginPage({ onLogin }) {
   const [error, setError] = useState("");
   const [showReg, setShowReg] = useState(false);
   const [reg, setReg] = useState({ name: "", email: "", password: "", phone: "" });
-
-
-
 
 
   const handleLogin = () => {

@@ -1,4 +1,4 @@
-import logo from "../../majalis store.png";
+import logo from "../../majalis-store.png";
 
 export default function HomePage({ user, products, onStartShopping }) {
   const categories = [...new Set(products.map((p) => p.category))].slice(0, 4);
