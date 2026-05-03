@@ -113,6 +113,27 @@ input, select, textarea { font-family: inherit; outline: none; }
   transition: transform 0.2s ease, background 0.2s ease;
 }
 .category-pill:hover { transform: translateY(-2px); background: rgba(201,162,39,0.22); }
+.category-card {
+  width: 200px;
+  margin-top: 18px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+.category-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-size: cover;
+  background-position: center;
+}
+.category-label {
+  padding: 14px 12px;
+  text-align: center;
+  font-weight: 700;
+  color: var(--text);
+  background: rgba(255,255,255,0.92);
+}
 .home-page .section-title { position: relative; overflow: hidden; }
 .home-page .section-title::after {
   content: "";
