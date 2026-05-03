@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { fmt, statusBg, statusColor } from "../utils/format.js";
+import { api } from "../utils/api.js";
 
 const isImageUrl = (value) => typeof value === "string" && /^https?:\/\//.test(value);
 
-export default function ClientShop({ user, products, orders, setOrders, setProducts }) {
+export default function ClientShop({ user, products, orders, setOrders, setProducts, onRefresh }) {
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("Tous");
@@ -16,14 +17,12 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
   const [successOrderId, setSuccessOrderId] = useState(null);
   const [notification, setNotification] = useState("");
   const [orderDetail, setOrderDetail] = useState(null);
+  const [placing, setPlacing] = useState(false);
   const prevOrdersRef = useRef(orders);
 
-  const cats = ["Tous", ...new Set(products.map((p) => p.category))];
+  const cats = ["Tous", ...new Set(products.map((p) => p.category).filter(Boolean))];
   const filtered = products.filter(
-    (p) =>
-      p.stock > 0 &&
-      (filterCat === "Tous" || p.category === filterCat) &&
-      p.name.toLowerCase().includes(search.toLowerCase())
+    (p) => p.stock > 0 && (filterCat === "Tous" || p.category === filterCat) && p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const addToCart = (p) => {
@@ -45,14 +44,10 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
 
   useEffect(() => {
     const oldOrders = prevOrdersRef.current;
-    const changes = myOrders
-      .map((order) => {
-        const previous = oldOrders.find((o) => o.id === order.id);
-        return previous && previous.status !== order.status
-          ? `La commande ${order.id} est ${order.status}`
-          : null;
-      })
-      .filter(Boolean);
+    const changes = myOrders.map((order) => {
+      const previous = oldOrders.find((o) => o.id === order.id);
+      return previous && previous.status !== order.status ? `La commande ${order.id} est ${order.status}` : null;
+    }).filter(Boolean);
     if (changes.length) {
       setNotification(changes.join(" — "));
       setTimeout(() => setNotification(""), 5000);
@@ -60,25 +55,27 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
     prevOrdersRef.current = orders;
   }, [orders, myOrders]);
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (!payment) return;
-    const newOrder = {
-      id: `CMD-${String(orders.length + 1).padStart(3, "0")}`,
-      client: user.name,
-      clientId: user.id,
-      items: cart.map((i) => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, image: i.image })),
-      total,
-      status: "en attente",
-      date: new Date().toISOString().split("T")[0],
-      payment,
-      phone,
-    };
-    setOrders((prev) => [...prev, newOrder]);
-    setCart([]);
-    setPayModal(false);
-    setSuccessOrderId(newOrder.id);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 4000);
+    setPlacing(true);
+    try {
+      const newOrder = await api.createOrder({
+        items: cart.map((i) => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, image: i.image })),
+        total,
+        payment,
+        phone,
+      });
+      setOrders((prev) => [...prev, newOrder]);
+      setCart([]);
+      setPayModal(false);
+      setSuccessOrderId(newOrder.id);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
+    } catch (err) {
+      alert("Erreur lors de la commande : " + err.message);
+    } finally {
+      setPlacing(false);
+    }
   };
 
   const payOptions = [
@@ -92,9 +89,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
       {success && (
         <div style={{ background: "#e6f9f1", border: "1px solid #0a7c5c", borderRadius: 12, padding: "14px 20px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 22 }}>✅</span>
-          <div>
-            <strong>Commande {successOrderId} confirmée !</strong> Nous vous contacterons sur {phone} pour finaliser.
-          </div>
+          <div><strong>Commande {successOrderId} confirmée !</strong> Nous vous contacterons sur {phone} pour finaliser.</div>
         </div>
       )}
       <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap", alignItems: "center" }}>
@@ -105,9 +100,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
             </div>
           )}
         </div>
-        <button className={`btn ${!showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(false)}>
-          🛍️ Boutique
-        </button>
+        <button className={`btn ${!showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(false)}>🛍️ Boutique</button>
         <button className={`btn ${showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(true)}>
           📋 Mes commandes {myOrders.length > 0 && `(${myOrders.length})`}
         </button>
@@ -129,16 +122,8 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
               <input placeholder="Rechercher…" value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             {cats.map((c) => (
-              <button
-                key={c}
-                onClick={() => setFilterCat(c)}
-                className="btn btn-sm"
-                style={{
-                  background: filterCat === c ? "var(--gold)" : "var(--surface)",
-                  border: "1px solid var(--border)",
-                  color: filterCat === c ? "var(--black)" : "var(--text2)",
-                }}
-              >
+              <button key={c} onClick={() => setFilterCat(c)} className="btn btn-sm"
+                style={{ background: filterCat === c ? "var(--gold)" : "var(--surface)", border: "1px solid var(--border)", color: filterCat === c ? "var(--black)" : "var(--text2)" }}>
                 {c}
               </button>
             ))}
@@ -164,28 +149,19 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
                 </button>
               </div>
             ))}
+            {filtered.length === 0 && <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 40, color: "var(--text2)" }}>Aucun produit disponible</div>}
           </div>
         </>
       ) : (
         <div className="card">
-          <div className="card-header">
-            <div className="card-title">Mes commandes</div>
-          </div>
+          <div className="card-header"><div className="card-title">Mes commandes</div></div>
           {myOrders.length === 0 ? (
             <div style={{ padding: "40px", textAlign: "center", color: "var(--text2)" }}>Aucune commande pour le moment.</div>
           ) : (
             <div className="table-wrap">
               <table>
                 <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Date</th>
-                    <th>Articles</th>
-                    <th>Total</th>
-                    <th>Paiement</th>
-                    <th>Statut</th>
-                    <th>Actions</th>
-                  </tr>
+                  <tr><th>ID</th><th>Date</th><th>Articles</th><th>Total</th><th>Paiement</th><th>Statut</th><th>Actions</th></tr>
                 </thead>
                 <tbody>
                   {myOrders.map((o) => (
@@ -195,19 +171,8 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
                       <td>{o.items.map((i) => `${i.name} ×${i.qty}`).join(", ")}</td>
                       <td style={{ fontWeight: 700 }}>{fmt(o.total)}</td>
                       <td>{o.payment}</td>
-                      <td>
-                        <span className="badge" style={{ background: statusBg[o.status], color: statusColor[o.status] }}>{o.status}</span>
-                      </td>
-                      <td>
-                        <button className="btn btn-outline btn-sm" onClick={() => setOrderDetail(o)}>
-                          Détails
-                        </button>
-                        {o.status === "livré" && (
-                          <button className="btn btn-gold btn-sm" onClick={() => setOrderDetail(o)} style={{ marginLeft: 6 }}>
-                            Facture
-                          </button>
-                        )}
-                      </td>
+                      <td><span className="badge" style={{ background: statusBg[o.status], color: statusColor[o.status] }}>{o.status}</span></td>
+                      <td><button className="btn btn-outline btn-sm" onClick={() => setOrderDetail(o)}>Détails</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -234,9 +199,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
                       {isImageUrl(item.image) ? (
                         <img src={item.image} alt={item.name} style={{ width: 52, height: 52, objectFit: "cover", borderRadius: 12 }} />
                       ) : (
-                        <div style={{ width: 52, height: 52, display: "grid", placeItems: "center", fontSize: 20, borderRadius: 12, background: "var(--surface2)" }}>
-                          {item.image || "🛍️"}
-                        </div>
+                        <div style={{ width: 52, height: 52, display: "grid", placeItems: "center", fontSize: 20, borderRadius: 12, background: "var(--surface2)" }}>{item.image || "🛍️"}</div>
                       )}
                       <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
@@ -254,7 +217,8 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
                     <span>Total</span>
                     <span style={{ color: "var(--gold-dark)" }}>{fmt(total)}</span>
                   </div>
-                  <button className="btn btn-gold" style={{ width: "100%", justifyContent: "center", marginTop: 16, padding: "13px", fontSize: 15 }} onClick={() => { setShowCart(false); setPayModal(true); }}>
+                  <button className="btn btn-gold" style={{ width: "100%", justifyContent: "center", marginTop: 16, padding: "13px", fontSize: 15 }}
+                    onClick={() => { setShowCart(false); setPayModal(true); }}>
                     Passer la commande →
                   </button>
                 </>
@@ -299,8 +263,9 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setPayModal(false)}>Annuler</button>
-              <button className="btn btn-gold" onClick={placeOrder} disabled={!payment || !phone} style={{ opacity: !payment || !phone ? 0.5 : 1 }}>
-                ✅ Confirmer le paiement
+              <button className="btn btn-gold" onClick={placeOrder} disabled={!payment || !phone || placing}
+                style={{ opacity: !payment || !phone || placing ? 0.5 : 1 }}>
+                {placing ? "En cours..." : "✅ Confirmer le paiement"}
               </button>
             </div>
           </div>
@@ -329,9 +294,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
                     {isImageUrl(item.image) ? (
                       <img src={item.image} alt={item.name} style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 10 }} />
                     ) : (
-                      <div style={{ width: 48, height: 48, display: "grid", placeItems: "center", background: "var(--surface2)", borderRadius: 10, fontSize: 18 }}>
-                        {item.image || "🛍️"}
-                      </div>
+                      <div style={{ width: 48, height: 48, display: "grid", placeItems: "center", background: "var(--surface2)", borderRadius: 10, fontSize: 18 }}>{item.image || "🛍️"}</div>
                     )}
                     <div>
                       <div style={{ fontWeight: 700 }}>{item.name}</div>
@@ -345,8 +308,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
                 </div>
               ))}
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--border)", fontWeight: 700, fontSize: 16 }}>
-                <span>Total TTC</span>
-                <span>{fmt(orderDetail.total)}</span>
+                <span>Total TTC</span><span>{fmt(orderDetail.total)}</span>
               </div>
             </div>
           </div>

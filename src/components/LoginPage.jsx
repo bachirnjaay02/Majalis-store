@@ -1,59 +1,42 @@
 import { useState } from "react";
 import logo from "../../majalis-store.png";
+import { api } from "../utils/api.js";
 
-const ADMIN_EMAIL = "admin@majalis.sn";
-const ADMIN_PASSWORD = "Majalis2003@";
 
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showReg, setShowReg] = useState(false);
   const [reg, setReg] = useState({ name: "", email: "", password: "", phone: "" });
-
-
-  const handleLogin = () => {
+  
+  const handleLogin = async () => {
     if (!email || !password) return setError("Remplissez tous les champs");
-
-    if (email === ADMIN_EMAIL) {
-      if (password !== ADMIN_PASSWORD) return setError("Mot de passe incorrect");
-      const adminUser = {
-        id: 1,
-        name: "Admin Majalis",
-        email: ADMIN_EMAIL,
-        role: "admin",
-        phone: "+221-77-840-19-04",
-        joined: new Date().toISOString().split("T")[0],
-      };
-      setError("");
-      return onLogin(adminUser);
-    }
-
-    const clientUser = {
-      id: Date.now(),
-      name: email.split("@")[0],
-      email,
-      role: "client",
-      phone: "",
-      joined: new Date().toISOString().split("T")[0],
-    };
+    setLoading(true);
     setError("");
-    onLogin(clientUser);
+    try {
+      const data = await api.login(email, password);
+      onLogin(data.token, data.user);
+    } catch (err) {
+      setError(err.message || "Identifiants incorrects");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReg = () => {
+  const handleReg = async () => {
     if (!reg.name || !reg.email || !reg.password) return setError("Remplissez tous les champs");
-    if (reg.email === ADMIN_EMAIL) return setError("Adresse administrateur réservée");
-    const newUser = {
-      id: Date.now(),
-      name: reg.name,
-      email: reg.email,
-      role: "client",
-      phone: reg.phone,
-      joined: new Date().toISOString().split("T")[0],
-    };
+    setLoading(true);
     setError("");
-    onLogin(newUser);
+    try {
+      const data = await api.register(reg.name, reg.email, reg.password, reg.phone);
+      onLogin(data.token, data.user);
+    } catch (err) {
+      setError(err.message || "Erreur lors de l'inscription");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -79,22 +62,13 @@ export default function LoginPage({ onLogin }) {
             </div>
             <div className="form-group">
               <label className="form-label">Mot de passe</label>
-              <input
-                className="form-input"
-                type="password"
-                placeholder="••••••••"
-                value={password}
+              <input className="form-input" type="password" placeholder="••••••••" value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-              />
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()} />
             </div>
-            {error && (
-              <div style={{ color: "#c0392b", fontSize: 13, marginBottom: 12, background: "#fff0f0", padding: "8px 12px", borderRadius: 8 }}>
-                ⚠️ {error}
-              </div>
-            )}
-            <button className="btn btn-gold" style={{ width: "100%", padding: "13px", fontSize: 15, justifyContent: "center" }} onClick={handleLogin}>
-              Connexion
+            {error && <div style={{ color: "#c0392b", fontSize: 13, marginBottom: 12, background: "#fff0f0", padding: "8px 12px", borderRadius: 8 }}>⚠️ {error}</div>}
+            <button className="btn btn-gold" style={{ width: "100%", padding: "13px", fontSize: 15, justifyContent: "center", opacity: loading ? 0.7 : 1 }} onClick={handleLogin} disabled={loading}>
+              {loading ? "Connexion..." : "Connexion"}
             </button>
             <div style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: "var(--text2)" }}>
               Pas de compte ?{" "}
@@ -123,13 +97,9 @@ export default function LoginPage({ onLogin }) {
               <label className="form-label">Mot de passe</label>
               <input className="form-input" type="password" placeholder="••••••••" value={reg.password} onChange={(e) => setReg({ ...reg, password: e.target.value })} />
             </div>
-            {error && (
-              <div style={{ color: "#c0392b", fontSize: 13, marginBottom: 12, background: "#fff0f0", padding: "8px 12px", borderRadius: 8 }}>
-                ⚠️ {error}
-              </div>
-            )}
-            <button className="btn btn-gold" style={{ width: "100%", padding: "13px", fontSize: 15, justifyContent: "center" }} onClick={handleReg}>
-              Créer mon compte
+            {error && <div style={{ color: "#c0392b", fontSize: 13, marginBottom: 12, background: "#fff0f0", padding: "8px 12px", borderRadius: 8 }}>⚠️ {error}</div>}
+            <button className="btn btn-gold" style={{ width: "100%", padding: "13px", fontSize: 15, justifyContent: "center", opacity: loading ? 0.7 : 1 }} onClick={handleReg} disabled={loading}>
+              {loading ? "Création..." : "Créer mon compte"}
             </button>
             <div style={{ textAlign: "center", marginTop: 14, fontSize: 13, color: "var(--text2)" }}>
               Déjà un compte ?{" "}

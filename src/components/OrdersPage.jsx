@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { fmt, statusBg, statusColor } from "../utils/format.js";
+import { api } from "../utils/api.js";
 
-export default function OrdersPage({ orders, setOrders, products, setProducts, users }) {
+export default function OrdersPage({ orders, setOrders, products, setProducts, users, onRefresh }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tous");
   const [detail, setDetail] = useState(null);
@@ -13,18 +14,17 @@ export default function OrdersPage({ orders, setOrders, products, setProducts, u
       (o.client.toLowerCase().includes(search.toLowerCase()) || o.id.includes(search))
   );
 
-  const updateStatus = (id, status) => {
-    const order = orders.find((o) => o.id === id);
-    if (status === "livré" && order.status !== "livré") {
-      setProducts((prev) =>
-        prev.map((p) => {
-          const item = order.items.find((i) => i.productId === p.id);
-          return item ? { ...p, stock: Math.max(0, p.stock - item.qty) } : p;
-        })
-      );
+  const updateStatus = async (order, status) => {
+    try {
+      const updated = await api.updateOrderStatus(order.dbId, status);
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status: updated.status } : o)));
+      if (detail?.id === order.id) setDetail((d) => ({ ...d, status: updated.status }));
+      if (status === "livré") {
+        api.getProducts().then(setProducts);
+      }
+    } catch (err) {
+      alert("Erreur mise à jour statut : " + err.message);
     }
-    setOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
-    if (detail?.id === id) setDetail({ ...detail, status });
   };
 
   return (
@@ -38,16 +38,8 @@ export default function OrdersPage({ orders, setOrders, products, setProducts, u
             </div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {statuses.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setFilter(s)}
-                  className="btn btn-sm"
-                  style={{
-                    background: filter === s ? "var(--gold)" : "var(--surface2)",
-                    color: filter === s ? "var(--black)" : "var(--text2)",
-                    border: "1px solid var(--border)",
-                  }}
-                >
+                <button key={s} onClick={() => setFilter(s)} className="btn btn-sm"
+                  style={{ background: filter === s ? "var(--gold)" : "var(--surface2)", color: filter === s ? "var(--black)" : "var(--text2)", border: "1px solid var(--border)" }}>
                   {s}
                 </button>
               ))}
@@ -57,16 +49,7 @@ export default function OrdersPage({ orders, setOrders, products, setProducts, u
         <div className="table-wrap">
           <table>
             <thead>
-              <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Client</th>
-                <th>Articles</th>
-                <th>Total</th>
-                <th>Paiement</th>
-                <th>Statut</th>
-                <th>Actions</th>
-              </tr>
+              <tr><th>ID</th><th>Date</th><th>Client</th><th>Articles</th><th>Total</th><th>Paiement</th><th>Statut</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {filtered.map((o) => (
@@ -76,33 +59,20 @@ export default function OrdersPage({ orders, setOrders, products, setProducts, u
                   <td>{o.client}</td>
                   <td style={{ color: "var(--text2)" }}>{o.items.length} article(s)</td>
                   <td style={{ fontWeight: 700 }}>{fmt(o.total)}</td>
-                  <td>
-                    <span className="badge" style={{ background: "#f0f8ff", color: "#1566a3" }}>{o.payment}</span>
-                  </td>
-                  <td>
-                    <span className="badge" style={{ background: statusBg[o.status], color: statusColor[o.status] }}>{o.status}</span>
-                  </td>
+                  <td><span className="badge" style={{ background: "#f0f8ff", color: "#1566a3" }}>{o.payment}</span></td>
+                  <td><span className="badge" style={{ background: statusBg[o.status], color: statusColor[o.status] }}>{o.status}</span></td>
                   <td>
                     <div style={{ display: "flex", gap: 6 }}>
-                      <button className="btn btn-outline btn-sm" onClick={() => setDetail(o)}>
-                        Détails
-                      </button>
-                      <select
-                        className="form-input"
-                        style={{ padding: "4px 8px", fontSize: 12, width: "auto" }}
-                        value={o.status}
-                        onChange={(e) => updateStatus(o.id, e.target.value)}
-                      >
-                        {["en attente", "en cours", "livré", "annulé"].map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
+                      <button className="btn btn-outline btn-sm" onClick={() => setDetail(o)}>Détails</button>
+                      <select className="form-input" style={{ padding: "4px 8px", fontSize: 12, width: "auto" }} value={o.status}
+                        onChange={(e) => updateStatus(o, e.target.value)}>
+                        {["en attente", "en cours", "livré", "annulé"].map((s) => <option key={s} value={s}>{s}</option>)}
                       </select>
                     </div>
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && <tr><td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--text2)" }}>Aucune commande</td></tr>}
             </tbody>
           </table>
         </div>
@@ -115,9 +85,7 @@ export default function OrdersPage({ orders, setOrders, products, setProducts, u
                 <div className="modal-title">{detail.id}</div>
                 <div style={{ fontSize: 12, color: "var(--text2)" }}>{detail.date} — {detail.payment}</div>
               </div>
-              <button className="btn-close" onClick={() => setDetail(null)}>
-                ✕
-              </button>
+              <button className="btn-close" onClick={() => setDetail(null)}>✕</button>
             </div>
             <div className="modal-body">
               <div style={{ background: "var(--surface2)", borderRadius: 10, padding: "12px 16px", marginBottom: 16 }}>
@@ -136,10 +104,8 @@ export default function OrdersPage({ orders, setOrders, products, setProducts, u
               </div>
               <div style={{ marginTop: 16 }}>
                 <label className="form-label">Changer le statut</label>
-                <select className="form-input" value={detail.status} onChange={(e) => updateStatus(detail.id, e.target.value)}>
-                  {["en attente", "en cours", "livré", "annulé"].map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                <select className="form-input" value={detail.status} onChange={(e) => updateStatus(detail, e.target.value)}>
+                  {["en attente", "en cours", "livré", "annulé"].map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
             </div>

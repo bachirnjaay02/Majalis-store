@@ -35,15 +35,15 @@ npm run preview
    ```bash
    npm install
    ```
-2. Démarrer le serveur de développement :
+2. Démarrer le serveur de développement React :
    ```bash
    npm run dev
    ```
-3. Construire pour la production :
+4. Construire pour la production :
    ```bash
    npm run build
    ```
-4. Prévisualiser la build :
+5. Prévisualiser la build :
    ```bash
    npm run preview
    ```
@@ -51,5 +51,4 @@ npm run preview
 ## Notes
 
 - L’application stocke l’utilisateur connecté dans `localStorage` pour conserver la session.
-- Les données produits et commandes sont initialisées à partir de `src/data/mockData.js`.
 - La sidebar mobile peut être ouverte/fermée avec le menu hamburger et un bouton de fermeture.
