@@ -20,14 +20,14 @@ const HERO_SLIDES = [
 ];
 
 const CATEGORIES = [
-  { label: "Djellabas gabardine", image: "https://i.pinimg.com/1200x/70/c4/7e/70c47e4f22dd4980fb23f4e1c9a8ae29.jpg" },
-  { label: "Djellabas kashmir", image: "https://i.pinimg.com/1200x/ff/b7/b7/ffb7b7a98100b0e5bb84a951335dad52.jpg" },
-  { label: "Kalla segn fallou", image: "https://i.pinimg.com/1200x/70/c4/7e/70c47e4f22dd4980fb23f4e1c9a8ae29.jpg" },
-  { label: "Laffa Baay Barra", image: "https://i.pinimg.com/1200x/ff/b7/b7/ffb7b7a98100b0e5bb84a951335dad52.jpg" },
-  { label: "Laffa simple", image: "https://i.pinimg.com/1200x/70/c4/7e/70c47e4f22dd4980fb23f4e1c9a8ae29.jpg" },
-  { label: "Djellabei simple", image: "https://i.pinimg.com/1200x/ff/b7/b7/ffb7b7a98100b0e5bb84a951335dad52.jpg" },
-  { label: "Kalla pashmina", image: "https://i.pinimg.com/1200x/70/c4/7e/70c47e4f22dd4980fb23f4e1c9a8ae29.jpg" },
-  { label: "Kalla fille", image: "https://i.pinimg.com/1200x/ff/b7/b7/ffb7b7a98100b0e5bb84a951335dad52.jpg" },
+  { label: "Djellabas gabardine", image: "https://scontent.fdkr9-1.fna.fbcdn.net/v/t1.15752-9/684283990_2267389627125252_3366546429048271303_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=107&ccb=1-7&_nc_sid=9f807c&_nc_ohc=WiLIJGXH0MQQ7kNvwESIdG3&_nc_oc=Adq1OwxfLxjx2z6G4Glg3Kk4qWfS5iU5FxmMN7ABK24npZHAuDUlN3bA7ruGG5bdZFw&_nc_zt=23&_nc_ht=scontent.fdkr9-1.fna&_nc_ss=7b6a8&oh=03_Q7cD5QHqB9KVMhfkGqZspvcdqW6FtOHB2XkNjtjFOHR39b-erw&oe=6A1C2F28" },
+  { label: "Djellabas kashmir", image: "https://scontent.fdkr9-1.fna.fbcdn.net/v/t1.15752-9/687664381_1420319176485677_8959977708470646959_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_ohc=8BVINNf8b24Q7kNvwGcCjqI&_nc_oc=AdrQneTTxtF2WphuJdlshmNS6FEnzfMFpUIOLinqdvYNhiDfKPGoIkgsDwxwYGVcAo0&_nc_zt=23&_nc_ht=scontent.fdkr9-1.fna&_nc_ss=7b6a8&oh=03_Q7cD5QELtoQPEzZAJCkbq8ujVRKpfY0jkl82wPe7IvFafMQplg&oe=6A1C37EC" },
+  { label: "Kalla segn fallou", image: "https://scontent.xx.fbcdn.net/v/t1.15752-9/688135156_1496816015218446_5814770741695964045_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=104&ccb=1-7&_nc_sid=9f807c&_nc_ohc=UjU2sUpPfq0Q7kNvwFCzgMx&_nc_oc=AdrxUw1uZb__7WQNalRt5K7REb1zgUy-smcDNxxUmLRPiLem7BIZnNUTlRPahIeYsTpophcqCVonUXEZxieb8yYN&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&oh=03_Q7cD5QGPuHpe-sHHS6Q0eGqaE3HIfZQTfQtCyGES4Mh1jMsEag&oe=6A20AA4F" },
+  { label: "Laffa Baay Barra", image: "hhttps://scontent.fdkr9-1.fna.fbcdn.net/v/t1.15752-9/678402837_883013724842110_305795757151690421_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=109&ccb=1-7&_nc_sid=9f807c&_nc_ohc=_CQUEOhnwC0Q7kNvwGqbT6t&_nc_oc=Adp0JLhv7WRhnVIFBQi57pG89IhKvt0zEMJzlZgyXdHm6m4SLE61civiADYJ2yi6B3Y&_nc_zt=23&_nc_ht=scontent.fdkr9-1.fna&_nc_ss=7b6a8&oh=03_Q7cD5QGGpjuBiYfaAEe4va-6fA9BinS8Peslt9iylaQDl3NU7A&oe=6A1C2227" },
+  { label: "Laffa simple", image: "https://scontent.fdkr9-1.fna.fbcdn.net/v/t1.15752-9/684664739_1395764719022822_6118160249023413851_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=105&ccb=1-7&_nc_sid=9f807c&_nc_ohc=KmvWVZnlT4MQ7kNvwG365fZ&_nc_oc=AdoXm-UXKlcndcv8zblM2myYS9F0xXItQCeZ2B4TDbMA2G_Bp5GzfxdLxfz-4AvntPA&_nc_zt=23&_nc_ht=scontent.fdkr9-1.fna&_nc_ss=7b6a8&oh=03_Q7cD5QFkHU2Cyqrf7cohQ9uYrusYu3_ZfhyQQyzZD-wHG1pLwQ&oe=6A1C241B" },
+  { label: "Djellabei simple", image: "https://scontent.fdkr9-1.fna.fbcdn.net/v/t1.15752-9/680464406_1638806667442262_56759431763573822_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_ohc=TFj0H7IIFIQQ7kNvwHRavRC&_nc_oc=AdoOw3FctjT1yqV6YG-ZrCMGjlL7K-j0w1eHtINkGE1eS6pkCHs1WXI0QZ5pY6lk8ek&_nc_zt=23&_nc_ht=scontent.fdkr9-1.fna&_nc_ss=7b6a8&oh=03_Q7cD5QGuPKjyjuaWLSIylK4wmoI_WDZdlPZA0C2pCpmFEwMelw&oe=6A1C4210" },
+  { label: "Kalla pashmina", image: "https://i.pinimg.com/1200x/ff/b7/b7/ffb7b7a98100b0e5bb84a951335dad52.jpg" },
+  { label: "Kalla fille", image: "https://i.pinimg.com/1200x/70/c4/7e/70c47e4f22dd4980fb23f4e1c9a8ae29.jpg" },
 ];
 
 export default function HomePage({ user, products, onStartShopping }) {
