@@ -28,6 +28,8 @@ const CATEGORIES = [
   { label: "Djellabei simple", image: "https://scontent.fdkr9-1.fna.fbcdn.net/v/t1.15752-9/680464406_1638806667442262_56759431763573822_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=102&ccb=1-7&_nc_sid=9f807c&_nc_ohc=TFj0H7IIFIQQ7kNvwHRavRC&_nc_oc=AdoOw3FctjT1yqV6YG-ZrCMGjlL7K-j0w1eHtINkGE1eS6pkCHs1WXI0QZ5pY6lk8ek&_nc_zt=23&_nc_ht=scontent.fdkr9-1.fna&_nc_ss=7b6a8&oh=03_Q7cD5QGuPKjyjuaWLSIylK4wmoI_WDZdlPZA0C2pCpmFEwMelw&oe=6A1C4210" },
   { label: "Kalla pashmina", image: "https://i.pinimg.com/1200x/ff/b7/b7/ffb7b7a98100b0e5bb84a951335dad52.jpg" },
   { label: "Kalla fille", image: "https://i.pinimg.com/1200x/70/c4/7e/70c47e4f22dd4980fb23f4e1c9a8ae29.jpg" },
+  { label: "Djellabei Murid", image: "https://scontent.xx.fbcdn.net/v/t1.15752-9/684141927_1322187446478564_4851461035806723020_n.jpg?_nc_cat=107&ccb=1-7&_nc_ohc=W8iQh2mvbc4Q7kNvwGIGvRE&_nc_oc=Adqd5lmlA0aTDbrlz9ktkssMYr_uT79TAGjIrOn6wNdYwQXJlSMOMxRPTx8MKBHbulDos1VjuRUaJW1EqU0wUvjp&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&stp=c0.5000x0.5000f_dst-emg0_p640x334_q75_tt6&ur=9f807c&_nc_sid=c24604&oh=03_Q7cD5QHfZG5smiW_HY-2JSsIyIKovKNjudk5EdD4_fDXLVzD-g&oe=6A20C845" },
+
 ];
 
 export default function HomePage({ user, products, onStartShopping }) {
