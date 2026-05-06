@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import logo from "../../majalis-store.png";
 
+
 const HERO_SLIDES = [
   {
     image: "https://i.pinimg.com/1200x/70/c4/7e/70c47e4f22dd4980fb23f4e1c9a8ae29.jpg",
@@ -361,7 +362,7 @@ export default function HomePage({ user, products, onStartShopping }) {
           Prêt à commander ?
         </div>
         <div style={{ color: "rgba(255,255,255,0.7)", fontSize: 14, marginBottom: 20 }}>
-          Bienvenue, <strong style={{ color: "var(--gold)" }}>{user.name.split(" ")[0]}</strong> ! Des tenues exclusives vous attendent.
+          Bienvenue, <strong style={{ color: "var(--gold)" }}>{user?.name?.split(" ")[0] || ""}</strong> ! Des tenues exclusives vous attendent.
         </div>
         <button onClick={onStartShopping} style={{
           background: "var(--gold)",

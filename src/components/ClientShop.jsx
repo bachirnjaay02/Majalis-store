@@ -4,7 +4,7 @@ import { api } from "../utils/api.js";
 
 const isImageUrl = (value) => typeof value === "string" && /^https?:\/\//.test(value);
 
-export default function ClientShop({ user, products, orders, setOrders, setProducts, onRefresh }) {
+export default function ClientShop({ user, products, orders, setOrders, setProducts, onRefresh, onLogin }) {
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("Tous");
@@ -12,12 +12,16 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
   const [showOrders, setShowOrders] = useState(false);
   const [payment, setPayment] = useState(null);
   const [payModal, setPayModal] = useState(false);
-  const [phone, setPhone] = useState(user.phone || "");
+  const [phone, setPhone] = useState(user?.phone || "");  
   const [success, setSuccess] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState(null);
   const [notification, setNotification] = useState("");
   const [orderDetail, setOrderDetail] = useState(null);
   const [placing, setPlacing] = useState(false);
+  const [loginModal, setLoginModal] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
   const prevOrdersRef = useRef(orders);
 
   const cats = ["Tous", ...new Set(products.map((p) => p.category).filter(Boolean))];
@@ -56,27 +60,41 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
   }, [orders, myOrders]);
 
   const placeOrder = async () => {
-    if (!payment) return;
-    setPlacing(true);
-    try {
-      const newOrder = await api.createOrder({
-        items: cart.map((i) => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, image: i.image })),
-        total,
-        payment,
-        phone,
-      });
-      setOrders((prev) => [...prev, newOrder]);
-      setCart([]);
-      setPayModal(false);
-      setSuccessOrderId(newOrder.id);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 4000);
-    } catch (err) {
-      alert("Erreur lors de la commande : " + err.message);
-    } finally {
-      setPlacing(false);
-    }
-  };
+  if (!payment) return;
+
+  // Si pas connecté, demander la connexion
+  if (!user) {
+    onRequireAuth((loggedUser) => {
+      // Après connexion, relancer la commande
+      placeOrderWithUser(loggedUser);
+    });
+    return;
+  }
+
+  placeOrderWithUser(user);
+};
+
+const placeOrderWithUser = async (currentUser) => {
+  setPlacing(true);
+  try {
+    const newOrder = await api.createOrder({
+      items: cart.map((i) => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, image: i.image })),
+      total,
+      payment,
+      phone,
+    });
+    setOrders((prev) => [...prev, newOrder]);
+    setCart([]);
+    setPayModal(false);
+    setSuccessOrderId(newOrder.id);
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 4000);
+  } catch (err) {
+    alert("Erreur lors de la commande : " + err.message);
+  } finally {
+    setPlacing(false);
+  }
+};
 
   const payOptions = [
     { name: "Wave", icon: "🌊", color: "#00b8f1", desc: "Payer avec Wave" },
@@ -100,10 +118,11 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
             </div>
           )}
         </div>
-        <button className={`btn ${!showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(false)}>🛍️ Boutique</button>
-        <button className={`btn ${showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(true)}>
-          📋 Mes commandes {myOrders.length > 0 && `(${myOrders.length})`}
-        </button>
+        {user && (
+          <button className={`btn ${showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(true)}>
+            📋 Mes commandes {myOrders.length > 0 && `(${myOrders.length})`}
+          </button>
+        )}
         <button className="btn btn-outline" style={{ marginLeft: "auto", position: "relative" }} onClick={() => setShowCart(true)}>
           🛒 Panier
           {cart.length > 0 && (
@@ -310,6 +329,63 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--border)", fontWeight: 700, fontSize: 16 }}>
                 <span>Total TTC</span><span>{fmt(orderDetail.total)}</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {loginModal && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setLoginModal(false)}>
+          <div className="modal" style={{ maxWidth: 400 }}>
+            <div className="modal-header">
+              <div className="modal-title">🔐 Connexion requise</div>
+              <button className="btn-close" onClick={() => setLoginModal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <p style={{ marginBottom: 16, color: "var(--text2)" }}>Veuillez vous connecter pour finaliser votre commande.</p>
+              <div className="form-group">
+                <label className="form-label">Email</label>
+                <input 
+                  className="form-input" 
+                  type="email" 
+                  placeholder="votre@email.com" 
+                  value={loginEmail} 
+                  onChange={(e) => setLoginEmail(e.target.value)} 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Mot de passe</label>
+                <input 
+                  className="form-input" 
+                  type="password" 
+                  placeholder="Votre mot de passe" 
+                  value={loginPassword} 
+                  onChange={(e) => setLoginPassword(e.target.value)} 
+                />
+              </div>
+              {loginError && (
+                <div style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>{loginError}</div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-outline" onClick={() => setLoginModal(false)}>Annuler</button>
+              <button 
+                className="btn btn-gold" 
+                onClick={async () => {
+                  try {
+                    const { token, user: userData } = await api.login(loginEmail, loginPassword);
+                    onLogin(token, userData);
+                    setLoginModal(false);
+                    // After login, proceed with order
+                    setPayModal(true);
+                  } catch (err) {
+                    setLoginError("Email ou mot de passe incorrect");
+                  }
+                }}
+                disabled={!loginEmail || !loginPassword}
+              >
+                Se connecter
+              </button>
             </div>
           </div>
         </div>
