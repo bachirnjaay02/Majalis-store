@@ -269,6 +269,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
               <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
               <div style={{ fontWeight: 800, fontSize: 18 }}>Connectez-vous pour commander</div>
               <div style={{ fontSize: 13, color: "var(--text2)", marginTop: 4 }}>Votre panier sera conservé après connexion</div>
+              <div style={{ fontSize: 13, color: "var(--text2)", marginTop: 4 }}>Saaay so connecter woul nouniouy xamei ya commander</div>
             </div>
             {/* affichage du formulaire de connexion */}
             {/* <LoginPage onLogin={handleLoginSuccess} embedded /> */}
