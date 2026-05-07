@@ -1,32 +1,32 @@
 import { useState, useEffect, useRef } from "react";
 import { fmt, statusBg, statusColor } from "../utils/format.js";
 import { api } from "../utils/api.js";
+import LoginPage from "./LoginPage.jsx";
 
 const isImageUrl = (value) => typeof value === "string" && /^https?:\/\//.test(value);
 
-export default function ClientShop({ user, products, orders, setOrders, setProducts, onRefresh, onLogin }) {
+export default function ClientShop({ user, products, orders, setOrders, setProducts, onRequireAuth, defaultTab, onRefresh }) {
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("Tous");
   const [showCart, setShowCart] = useState(false);
-  const [showOrders, setShowOrders] = useState(false);
+  const [showOrders, setShowOrders] = useState(defaultTab === "orders");
   const [payment, setPayment] = useState(null);
   const [payModal, setPayModal] = useState(false);
-  const [phone, setPhone] = useState(user?.phone || "");  
+  const [phone, setPhone] = useState(user?.phone || "");
   const [success, setSuccess] = useState(false);
   const [successOrderId, setSuccessOrderId] = useState(null);
   const [notification, setNotification] = useState("");
   const [orderDetail, setOrderDetail] = useState(null);
   const [placing, setPlacing] = useState(false);
-  const [loginModal, setLoginModal] = useState(false);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
-  const [loginError, setLoginError] = useState("");
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const prevOrdersRef = useRef(orders);
 
   const cats = ["Tous", ...new Set(products.map((p) => p.category).filter(Boolean))];
   const filtered = products.filter(
-    (p) => p.stock > 0 && (filterCat === "Tous" || p.category === filterCat) && p.name.toLowerCase().includes(search.toLowerCase())
+    (p) => p.stock > 0 &&
+      (filterCat === "Tous" || p.category === filterCat) &&
+      p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   const addToCart = (p) => {
@@ -44,13 +44,14 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
   };
 
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const myOrders = orders.filter((o) => o.clientId === user.id);
+  const myOrders = user ? orders.filter((o) => o.clientId === user.id) : [];
 
   useEffect(() => {
     const oldOrders = prevOrdersRef.current;
     const changes = myOrders.map((order) => {
       const previous = oldOrders.find((o) => o.id === order.id);
-      return previous && previous.status !== order.status ? `La commande ${order.id} est ${order.status}` : null;
+      return previous && previous.status !== order.status
+        ? `La commande ${order.id} est ${order.status}` : null;
     }).filter(Boolean);
     if (changes.length) {
       setNotification(changes.join(" — "));
@@ -59,42 +60,48 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
     prevOrdersRef.current = orders;
   }, [orders, myOrders]);
 
+  // Quand on clique sur "Passer la commande"
+  const handleCheckout = () => {
+    if (!user) {
+      // Pas connecté → afficher modal auth
+      setShowCart(false);
+      setShowLoginModal(true);
+    } else {
+      setShowCart(false);
+      setPayModal(true);
+    }
+  };
+
+  // Après connexion depuis le modal
+  const handleLoginSuccess = (token, userData) => {
+    api.setToken(token);
+    setShowLoginModal(false);
+    setPayModal(true);
+    if (onRequireAuth) onRequireAuth(() => {});
+  };
+
   const placeOrder = async () => {
-  if (!payment) return;
-
-  // Si pas connecté, demander la connexion
-  if (!user) {
-    onRequireAuth((loggedUser) => {
-      // Après connexion, relancer la commande
-      placeOrderWithUser(loggedUser);
-    });
-    return;
-  }
-
-  placeOrderWithUser(user);
-};
-
-const placeOrderWithUser = async (currentUser) => {
-  setPlacing(true);
-  try {
-    const newOrder = await api.createOrder({
-      items: cart.map((i) => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, image: i.image })),
-      total,
-      payment,
-      phone,
-    });
-    setOrders((prev) => [...prev, newOrder]);
-    setCart([]);
-    setPayModal(false);
-    setSuccessOrderId(newOrder.id);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 4000);
-  } catch (err) {
-    alert("Erreur lors de la commande : " + err.message);
-  } finally {
-    setPlacing(false);
-  }
-};
+    if (!payment) return;
+    setPlacing(true);
+    try {
+      const newOrder = await api.createOrder({
+        items: cart.map((i) => ({ productId: i.id, name: i.name, qty: i.qty, price: i.price, image: i.image })),
+        total,
+        payment,
+        phone,
+      });
+      setOrders((prev) => [...prev, newOrder]);
+      setCart([]);
+      setPayModal(false);
+      setSuccessOrderId(newOrder.id);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
+    } catch (err) {
+      alert("Erreur lors de la commande : " + err.message);
+    } finally {
+      setPlacing(false);
+    }
+  };
 
   const payOptions = [
     { name: "Wave", icon: "🌊", color: "#00b8f1", desc: "Payer avec Wave" },
@@ -110,6 +117,7 @@ const placeOrderWithUser = async (currentUser) => {
           <div><strong>Commande {successOrderId} confirmée !</strong> Nous vous contacterons sur {phone} pour finaliser.</div>
         </div>
       )}
+
       <div style={{ display: "flex", gap: 10, marginBottom: 22, flexWrap: "wrap", alignItems: "center" }}>
         <div style={{ flex: 1, minWidth: 220 }}>
           {notification && (
@@ -119,7 +127,7 @@ const placeOrderWithUser = async (currentUser) => {
           )}
         </div>
         {user && (
-          <button className={`btn ${showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(true)}>
+          <button className={`btn ${showOrders ? "btn-gold" : "btn-outline"}`} onClick={() => setShowOrders(!showOrders)}>
             📋 Mes commandes {myOrders.length > 0 && `(${myOrders.length})`}
           </button>
         )}
@@ -168,7 +176,11 @@ const placeOrderWithUser = async (currentUser) => {
                 </button>
               </div>
             ))}
-            {filtered.length === 0 && <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 40, color: "var(--text2)" }}>Aucun produit disponible</div>}
+            {filtered.length === 0 && (
+              <div style={{ gridColumn: "1/-1", textAlign: "center", padding: 40, color: "var(--text2)" }}>
+                Aucun produit disponible
+              </div>
+            )}
           </div>
         </>
       ) : (
@@ -201,6 +213,7 @@ const placeOrderWithUser = async (currentUser) => {
         </div>
       )}
 
+      {/* PANIER */}
       {showCart && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowCart(false)}>
           <div className="modal" style={{ maxWidth: 460 }}>
@@ -237,7 +250,7 @@ const placeOrderWithUser = async (currentUser) => {
                     <span style={{ color: "var(--gold-dark)" }}>{fmt(total)}</span>
                   </div>
                   <button className="btn btn-gold" style={{ width: "100%", justifyContent: "center", marginTop: 16, padding: "13px", fontSize: 15 }}
-                    onClick={() => { setShowCart(false); setPayModal(true); }}>
+                    onClick={handleCheckout}>
                     Passer la commande →
                   </button>
                 </>
@@ -247,6 +260,23 @@ const placeOrderWithUser = async (currentUser) => {
         </div>
       )}
 
+      {/* MODAL AUTH — si pas connecté */}
+      {showLoginModal && (
+        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowLoginModal(false)}>
+          <div style={{ background: "var(--surface)", borderRadius: 20, padding: 32, maxWidth: 420, width: "90%", position: "relative" }}>
+            <button onClick={() => setShowLoginModal(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 18, cursor: "pointer", color: "var(--text2)" }}>✕</button>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔐</div>
+              <div style={{ fontWeight: 800, fontSize: 18 }}>Connectez-vous pour commander</div>
+              <div style={{ fontSize: 13, color: "var(--text2)", marginTop: 4 }}>Votre panier sera conservé après connexion</div>
+            </div>
+            {/* affichage du formulaire de connexion */}
+            {/* <LoginPage onLogin={handleLoginSuccess} embedded /> */}
+          </div>
+        </div>
+      )}
+
+      {/* PAIEMENT */}
       {payModal && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setPayModal(false)}>
           <div className="modal" style={{ maxWidth: 440 }}>
@@ -291,6 +321,7 @@ const placeOrderWithUser = async (currentUser) => {
         </div>
       )}
 
+      {/* DETAIL COMMANDE */}
       {orderDetail && (
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setOrderDetail(null)}>
           <div className="modal" style={{ maxWidth: 520 }}>
@@ -329,65 +360,6 @@ const placeOrderWithUser = async (currentUser) => {
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18, paddingTop: 14, borderTop: "1px solid var(--border)", fontWeight: 700, fontSize: 16 }}>
                 <span>Total TTC</span><span>{fmt(orderDetail.total)}</span>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {loginModal && (
-        // affichage du modal de connexion
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setLoginModal(false)}>
-          <div className="modal" style={{ maxWidth: 400 }}>
-            <div className="modal-header">
-              <div className="modal-title">🔐 Connexion requise</div>
-              <button className="btn-close" onClick={() => setLoginModal(false)}>✕</button>
-            </div>
-            <div className="modal-body">
-              <p style={{ marginBottom: 16, color: "var(--text2)" }}>Veuillez vous connecter pour finaliser votre commande.</p>
-      
-              <div className="form-group">
-                <label className="form-label">Email</label>
-                <input 
-                  className="form-input" 
-                  type="email" 
-                  placeholder="votre@email.com" 
-                  value={loginEmail} 
-                  onChange={(e) => setLoginEmail(e.target.value)} 
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Mot de passe</label>
-                <input 
-                  className="form-input" 
-                  type="password" 
-                  placeholder="Votre mot de passe" 
-                  value={loginPassword} 
-                  onChange={(e) => setLoginPassword(e.target.value)} 
-                />
-              </div>
-              {loginError && (
-                <div style={{ color: "#c0392b", fontSize: 13, marginTop: 8 }}>{loginError}</div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-outline" onClick={() => setLoginModal(false)}>Annuler</button>
-              <button 
-                className="btn btn-gold" 
-                onClick={async () => {
-                  try {
-                    const { token, user: userData } = await api.login(loginEmail, loginPassword);
-                    onLogin(token, userData);
-                    setLoginModal(false);
-                    // After login, proceed with order
-                    setPayModal(true);
-                  } catch (err) {
-                    setLoginError("Email ou mot de passe incorrect");
-                  }
-                }}
-                disabled={!loginEmail || !loginPassword}
-              >
-                Se connecter
-              </button>
             </div>
           </div>
         </div>

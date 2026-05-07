@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, use } from "react";
 import logo from "../majalis-store.png";
 import logoblanc from "../majalis-store-blanc.png";
 import LoginPage from "./components/LoginPage.jsx";
@@ -169,6 +169,9 @@ export default function App() {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [page]);
+
+
+
 
   // --- Loading écran ---
   if (loading) {
