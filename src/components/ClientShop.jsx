@@ -335,6 +335,7 @@ const placeOrderWithUser = async (currentUser) => {
       )}
 
       {loginModal && (
+        // affichage du modal de connexion
         <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setLoginModal(false)}>
           <div className="modal" style={{ maxWidth: 400 }}>
             <div className="modal-header">
@@ -343,6 +344,7 @@ const placeOrderWithUser = async (currentUser) => {
             </div>
             <div className="modal-body">
               <p style={{ marginBottom: 16, color: "var(--text2)" }}>Veuillez vous connecter pour finaliser votre commande.</p>
+      
               <div className="form-group">
                 <label className="form-label">Email</label>
                 <input 

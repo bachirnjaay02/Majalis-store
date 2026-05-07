@@ -18,6 +18,11 @@ const HERO_SLIDES = [
     title: "Collection Laffa",
     subtitle: "Qualité premium · Prix imbattables",
   },
+  {
+    image: "https://scontent.xx.fbcdn.net/v/t1.15752-9/684141927_1322187446478564_4851461035806723020_n.jpg?_nc_cat=107&ccb=1-7&_nc_ohc=W8iQh2mvbc4Q7kNvwGIGvRE&_nc_oc=Adqd5lmlA0aTDbrlz9ktkssMYr_uT79TAGjIrOn6wNdYwQXJlSMOMxRPTx8MKBHbulDos1VjuRUaJW1EqU0wUvjp&_nc_ad=z-m&_nc_cid=0&_nc_zt=23&_nc_ht=scontent.xx&stp=c0.5000x0.5000f_dst-emg0_p640x334_q75_tt6&ur=9f807c&_nc_sid=c24604&oh=03_Q7cD5QHfZG5smiW_HY-2JSsIyIKovKNjudk5EdD4_fDXLVzD-g&oe=6A20C845",
+    title: "Collection BAAY SALIOU",
+    subtitle: "Qualité premium · Prix imbattables",
+  },
 ];
 
 const CATEGORIES = [
