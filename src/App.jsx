@@ -420,7 +420,7 @@ export default function App() {
           onClick={() => setPage(PAGES.HOME)}
           style={{ cursor: "pointer" }}
         >
-          <img src={logoblanc} alt="logoblanc" />
+          <img src={logoblanc} alt="logoblanc" style={{ width: "60px", height: "60px" }} />
           <div className="client-topbar-logo-text">
             <div className="logo-text" style={{ fontSize: 14 }}>
               MAJALIS
@@ -432,11 +432,10 @@ export default function App() {
         </div>
 
  {/* Burger Mobile */}
-        <button
+        <button 
           className="Nav-mobile"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           style={{
-            display: "flex",
             alignItems: "right",
             justifyContent: "center",
             background: "none",
@@ -511,15 +510,15 @@ export default function App() {
                 </span>
               </div>
               <button onClick={logout} className="logout">
-                Déconnexion
+                ⏻
               </button>
             </>
           ) : (
-            <button
+            <button style={{ background: "var(--gold)", color: "#1a1207" }}
               onClick={() => setShowAuthModal(true)}
               className="login"
             >
-              Connexion
+             Connexion
             </button>
           )}
         </div>
@@ -625,7 +624,7 @@ export default function App() {
                     setShowAuthModal(true);
                   }}
                   className="login"
-                  style={{ width: "100%" }}
+                  style={{ background: "var(--gold)", color: "#1a1207", fontSize: 16,fontWeight: "bold",borderRadius: 8, width: "100%" }}
                 >
                   Connexion
                 </button>

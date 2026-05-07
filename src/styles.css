@@ -537,7 +537,6 @@ tr:hover td { background: var(--surface2); }
   .user-avatar { width: 32px; height: 32px; font-size: 13px; }
 }
 
-
 /* Toast animation */
 @keyframes slideUp {
   from {
@@ -566,16 +565,21 @@ tr:hover td { background: var(--surface2); }
   }
 }
 
-@media (min-width: 769px) {
-  .Nav-mobile {
-    display: flex!important;
-    justify-content: space-between;
-  }
-  .Nav-desktop {
-    display: flex !important;
-  }
+/* Caché par défaut (desktop) */
+.Nav-mobile {
+  display: none;
 }
 
+/* Affiché uniquement sur mobile */
+@media (max-width: 768px) {
+  .Nav-mobile {
+    display: flex;
+  }
+
+  .Nav-desktop {
+    display: none;
+  }
+}
 /* ===== ÉCRANS EXTRA PETITS (moins de 360px) ===== */
 @media (max-width: 360px) {
   html { font-size: 12px; }
@@ -800,7 +804,8 @@ tr:hover td { background: var(--surface2); }
 }
 
 .client-topbar-user button.login {
-  background: transparent;
+  background: var(--gold);
+  color: #1a1207;
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
