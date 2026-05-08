@@ -104,10 +104,25 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
   };
 
   const payOptions = [
-    { name: "Wave", icon: "🌊", color: "#00b8f1", desc: "Payer avec Wave" },
-    { name: "Orange Money", icon: "🟠", color: "#ff6600", desc: "Payer avec Orange Money" },
-    { name: "Free Money", icon: "💜", color: "#8b1fc5", desc: "Payer avec Free Money" },
-  ];
+  { 
+    name: "Wave", 
+    icon: <img src="/icons/wave.png" alt="Wave" style={{ width:100, height:100, objectFit:"contain" }} />, 
+    color: "#00b8f1", 
+    desc: "Payer avec Wave" 
+  },
+  { 
+    name: "Orange Money", 
+    icon: <img src="/icons/OM.png" alt="Orange Money" style={{ width:33, height:33, objectFit:"contain" }} />, 
+    color: "#ff6600", 
+    desc: "Payer avec Orange Money" 
+  },
+  { 
+    name: "Mix by Yas", 
+    icon: <img src="/icons/yas.png" alt="Mix by Yas" style={{ width:34, height:34, objectFit:"contain" }} />, 
+    color: "#f6e336", 
+    desc: "Payer avec Mix by Yas" 
+  },
+];
 
   return (
     <div>
@@ -307,7 +322,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
               </div>
               {payment && (
                 <div style={{ background: "#fff8e6", border: "1px solid #f0c040", borderRadius: 10, padding: "12px 16px", marginTop: 8, fontSize: 13 }}>
-                  📲 Vous recevrez un message de confirmation sur votre numéro {payment} pour valider le paiement.
+                  📲 Vous recevrez un message de confirmation sur votre numéro {payment} pour valider le paiement et discuter sur les détails de votre commande.
                 </div>
               )}
             </div>
