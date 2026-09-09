@@ -38,6 +38,8 @@ const CATEGORIES = [
 
 ];
 
+const isImageUrl = (value) => typeof value === "string" && /^(https?:\/\/|data:image\/)/.test(value);
+
 export default function HomePage({ user, products, onStartShopping }) {
   const [slide, setSlide] = useState(0);
   const [animating, setAnimating] = useState(false);
@@ -54,6 +56,14 @@ export default function HomePage({ user, products, onStartShopping }) {
   }, []);
 
   const current = HERO_SLIDES[slide];
+  const collections = Object.values(
+    products.reduce((groups, product) => {
+      const category = product.category?.trim() || "Sans catégorie";
+      if (!groups[category]) groups[category] = { label: category, products: [] };
+      groups[category].products.push(product);
+      return groups;
+    }, {})
+  );
 
   return (
     <div style={{ overflow: "hidden" }}>
@@ -264,8 +274,14 @@ export default function HomePage({ user, products, onStartShopping }) {
           gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
           gap: 16,
         }}>
-          {CATEGORIES.map((cat, i) => (
-            <div key={cat.label} onClick={onStartShopping} style={{
+          {collections.length === 0 ? (
+            <div style={{ gridColumn: "1 / -1", padding: 28, textAlign: "center", color: "var(--text2)", border: "1px dashed var(--border)", borderRadius: 16 }}>
+              Les collections apparaîtront dès que des produits seront ajoutés dans la boutique.
+            </div>
+          ) : collections.map((collection, i) => {
+            const product = collection.products.find((item) => isImageUrl(item.image));
+            return (
+            <div key={collection.label} onClick={onStartShopping} style={{
               borderRadius: 16,
               overflow: "hidden",
               cursor: "pointer",
@@ -278,10 +294,13 @@ export default function HomePage({ user, products, onStartShopping }) {
               onMouseOver={e => { e.currentTarget.style.transform = "scale(1.04)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(0,0,0,0.2)"; }}
               onMouseOut={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.12)"; }}
             >
-              <img src={cat.image} alt={cat.label} style={{
-                width: "100%", height: "100%", objectFit: "cover",
-                transition: "transform 0.4s",
-              }} />
+              {product ? (
+                <img src={product.image} alt={collection.label} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.4s" }} />
+              ) : (
+                <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", background: "var(--surface2)", fontSize: 48 }}>
+                  {collection.products[0].image || "🛍️"}
+                </div>
+              )}
               <div style={{
                 position: "absolute", inset: 0,
                 background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 60%)",
@@ -291,7 +310,8 @@ export default function HomePage({ user, products, onStartShopping }) {
                 color: "#fff", fontWeight: 700, fontSize: 13,
                 textShadow: "0 1px 4px rgba(0,0,0,0.5)",
               }}>
-                {cat.label}
+                <div>{collection.label}</div>
+                <div style={{ fontSize: 11, fontWeight: 500, opacity: 0.85, marginTop: 3 }}>{collection.products.length} article(s)</div>
               </div>
               <div style={{
                 position: "absolute", top: 10, right: 10,
@@ -304,7 +324,8 @@ export default function HomePage({ user, products, onStartShopping }) {
                 →
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
