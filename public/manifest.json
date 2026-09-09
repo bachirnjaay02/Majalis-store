@@ -3,6 +3,8 @@
   "short_name": "Majalis",
   "description": "Mode dynamique & élégance instantanée",
   "start_url": "/",
+  "scope": "/",
+  "id": "/",
   "display": "standalone",
   "background_color": "#f5f0e8",
   "theme_color": "#C1994C",
