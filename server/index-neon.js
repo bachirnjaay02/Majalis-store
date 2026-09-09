@@ -145,7 +145,25 @@ function validateProduct(body) {
 }
 
 const app = express();
-app.use(cors());
+
+const allowedOrigins = [
+  "https://majalis-store.vercel.app",
+  "http://localhost:5173",
+  "http://localhost:3000"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Accès non autorisé par la politique CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(express.json({ limit: "1mb" }));
 
 app.post("/api/register", async (req, res, next) => {
