@@ -119,12 +119,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
     color: "#ff6600", 
     desc: "Payer avec Orange Money" 
   },
-  { 
-    name: "Mix by Yas", 
-    icon: <img src="/icons/yas.png" alt="Mix by Yas" style={{ width:34, height:34, objectFit:"contain" }} />, 
-    color: "#f6e336", 
-    desc: "Payer avec Mix by Yas" 
-  },
+  
 ];
 
   return (

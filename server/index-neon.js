@@ -17,7 +17,6 @@ if (!process.env.DATABASE_URL) {
 }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-const sessions = new Map();
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -71,6 +70,12 @@ async function initDatabase() {
       quantity INTEGER NOT NULL CHECK (quantity > 0),
       image TEXT NOT NULL DEFAULT ''
     );
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expires_at TIMESTAMPTZ NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS sessions_expires_at_idx ON sessions(expires_at);
   `);
 }
 
@@ -121,9 +126,8 @@ async function publicOrder(order) {
 async function findUserByToken(req) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
   const sessionToken = token || readCookie(req, "majalis_session");
-  const userId = sessionToken && sessions.get(sessionToken);
-  if (!userId) return null;
-  const { rows } = await query("SELECT * FROM users WHERE id = $1", [userId]);
+  if (!sessionToken) return null;
+  const { rows } = await query("SELECT users.* FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token = $1 AND sessions.expires_at > NOW()", [sessionToken]);
   return rows[0] || null;
 }
 
@@ -143,9 +147,9 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-function issueSession(user) {
+async function issueSession(user) {
   const token = crypto.randomBytes(32).toString("hex");
-  sessions.set(token, user.id);
+  await query("INSERT INTO sessions (token, user_id, expires_at) VALUES ($1, $2, NOW() + INTERVAL '7 days')", [token, user.id]);
   return token;
 }
 
@@ -160,13 +164,15 @@ const app = express();
 
 const allowedOrigins = [
   "https://majalis-store.vercel.app",
+  "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000"
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    const isVercelPreview = origin?.endsWith(".vercel.app");
+    if (!origin || allowedOrigins.includes(origin) || origin === process.env.FRONTEND_URL || isVercelPreview) {
       return callback(null, true);
     }
     return callback(new Error("Accès non autorisé par la politique CORS"));
@@ -187,7 +193,7 @@ app.post("/api/register", async (req, res, next) => {
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) return res.status(422).json({ message: "Nom, email et mot de passe de 6 caractères minimum requis" });
   try {
     const { rows } = await query("INSERT INTO users (name, email, password_hash, phone) VALUES ($1, $2, $3, $4) RETURNING *", [name.trim(), email.trim().toLowerCase(), hashPassword(password), phone.trim()]);
-    const token = issueSession(rows[0]);
+    const token = await issueSession(rows[0]);
     res.setHeader("Set-Cookie", sessionCookie(token));
     res.status(201).json({ user: publicUser(rows[0]) });
   } catch (error) {
@@ -201,7 +207,7 @@ app.post("/api/login", async (req, res, next) => {
     const { rows } = await query("SELECT * FROM users WHERE email = $1", [req.body.email?.trim().toLowerCase()]);
     const user = rows[0];
     if (!user || !req.body.password || !verifyPassword(req.body.password, user.password_hash)) return res.status(401).json({ message: "Email ou mot de passe incorrect" });
-    const token = issueSession(user);
+    const token = await issueSession(user);
     res.setHeader("Set-Cookie", sessionCookie(token));
     res.json({ user: publicUser(user) });
   } catch (error) {
@@ -209,12 +215,16 @@ app.post("/api/login", async (req, res, next) => {
   }
 });
 
-app.post("/api/logout", requireAuth, (req, res) => {
+app.post("/api/logout", requireAuth, async (req, res, next) => {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
   const sessionToken = token || readCookie(req, "majalis_session");
-  sessions.delete(sessionToken);
-  res.setHeader("Set-Cookie", "majalis_session=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax");
-  res.json({ message: "Déconnexion réussie" });
+  try {
+    if (sessionToken) await query("DELETE FROM sessions WHERE token = $1", [sessionToken]);
+    res.setHeader("Set-Cookie", "majalis_session=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax");
+    res.json({ message: "Déconnexion réussie" });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get("/api/me", requireAuth, (req, res) => res.json(publicUser(req.user)));
