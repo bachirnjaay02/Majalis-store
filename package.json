@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "server": "node server/index-neon.js",
+    "serve": "node server/index-neon.js",
     "start:full": "node server/index-neon.js & vite",
     "start": "npm run dev",
     "build": "vite build",

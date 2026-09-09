@@ -23,7 +23,21 @@ async function request(method, path, body = null) {
     options.body = JSON.stringify(body);
   }
 
-  const res = await fetch(`${API_BASE}${path}`, options);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  options.signal = controller.signal;
+
+  let res;
+  try {
+    res = await fetch(`${API_BASE}${path}`, options);
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Le serveur est indisponible ou trop lent. Vérifiez VITE_API_URL sur Vercel.');
+    }
+    throw new Error('Impossible de joindre le serveur. Vérifiez VITE_API_URL sur Vercel.');
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Erreur réseau' }));
