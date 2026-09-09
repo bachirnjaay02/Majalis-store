@@ -166,6 +166,10 @@ app.use(cors({
 
 app.use(express.json({ limit: "1mb" }));
 
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, service: "majalis-api" });
+});
+
 app.post("/api/register", async (req, res, next) => {
   const { name, email, password, phone = "" } = req.body;
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) return res.status(422).json({ message: "Nom, email et mot de passe de 6 caractères minimum requis" });
