@@ -1,12 +1,12 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
+let sessionToken = null;
 
 function getToken() {
-  return localStorage.getItem('majalis_token');
+  return sessionToken;
 }
 
 function setToken(token) {
-  if (token) localStorage.setItem('majalis_token', token);
-  else localStorage.removeItem('majalis_token');
+  sessionToken = token || null;
 }
 
 async function request(method, path, body = null) {
@@ -30,6 +30,7 @@ async function request(method, path, body = null) {
     throw new Error(err.message || err.errors?.email?.[0] || 'Erreur serveur');
   }
 
+  if (res.status === 204) return null;
   return res.json();
 }
 
