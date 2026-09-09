@@ -12,6 +12,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
   const [showCart, setShowCart] = useState(false);
   const [showOrders, setShowOrders] = useState(defaultTab === "orders");
   const [payment, setPayment] = useState(null);
+  const [paymentStep, setPaymentStep] = useState(1);
   const [payModal, setPayModal] = useState(false);
   const [phone, setPhone] = useState(user?.phone || "");
   const [success, setSuccess] = useState(false);
@@ -68,6 +69,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
       setShowLoginModal(true);
     } else {
       setShowCart(false);
+      setPaymentStep(1);
       setPayModal(true);
     }
   };
@@ -76,6 +78,7 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
   const handleLoginSuccess = (token, userData) => {
     api.setToken(token);
     setShowLoginModal(false);
+    setPaymentStep(1);
     setPayModal(true);
     if (onRequireAuth) onRequireAuth(() => {});
   };
@@ -305,32 +308,38 @@ export default function ClientShop({ user, products, orders, setOrders, setProdu
                 <span style={{ color: "var(--text2)" }}>Total à payer</span>
                 <span style={{ fontWeight: 800, fontSize: 18, color: "var(--gold-dark)" }}>{fmt(total)}</span>
               </div>
-              <label className="form-label">Choisissez votre opérateur</label>
-              {payOptions.map((p) => (
-                <button key={p.name} className={`payment-btn ${payment === p.name ? "selected" : ""}`} onClick={() => setPayment(p.name)}>
-                  <div className="payment-logo" style={{ background: p.color + "20" }}>{p.icon}</div>
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{p.name}</div>
-                    <div style={{ fontSize: 12, color: "var(--text2)" }}>{p.desc}</div>
+              {paymentStep === 1 ? (
+                <>
+                  <label className="form-label">1. Choisissez votre opérateur</label>
+                  {payOptions.map((p) => (
+                    <button key={p.name} className={`payment-btn ${payment === p.name ? "selected" : ""}`} onClick={() => setPayment(p.name)}>
+                      <div className="payment-logo" style={{ background: p.color + "20" }}>{p.icon}</div>
+                      <div>
+                        <div style={{ fontWeight: 700 }}>{p.name}</div>
+                        <div style={{ fontSize: 12, color: "var(--text2)" }}>{p.desc}</div>
+                      </div>
+                      {payment === p.name && <span style={{ marginLeft: "auto", color: "var(--gold-dark)" }}>✓</span>}
+                    </button>
+                  ))}
+                  <div className="form-group" style={{ marginTop: 16 }}>
+                    <label className="form-label">2. Numéro de téléphone Mobile Money</label>
+                    <input className="form-input" placeholder="77-000-00-00" value={phone} onChange={(e) => setPhone(e.target.value)} />
                   </div>
-                  {payment === p.name && <span style={{ marginLeft: "auto", color: "var(--gold-dark)" }}>✓</span>}
-                </button>
-              ))}
-              <div className="form-group" style={{ marginTop: 16 }}>
-                <label className="form-label">Numéro de téléphone (Mobile Money)</label>
-                <input className="form-input" placeholder="77-000-00-00" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              </div>
-              {payment && (
-                <div style={{ background: "#fff8e6", border: "1px solid #f0c040", borderRadius: 10, padding: "12px 16px", marginTop: 8, fontSize: 13 }}>
-                  📲 Vous recevrez un message de confirmation sur votre numéro {payment} pour valider le paiement et discuter sur les détails de votre commande.
+                </>
+              ) : (
+                <div style={{ background: "#fff8e6", border: "1px solid #f0c040", borderRadius: 10, padding: "16px", fontSize: 13, lineHeight: 1.6 }}>
+                  <strong>3. Paiement {payment}</strong>
+                  <p style={{ margin: "8px 0" }}>Votre commande sera enregistrée en attente. Effectuez le paiement depuis l’application {payment} avec le numéro <strong>{phone}</strong>, puis confirmez ci-dessous.</p>
+                  <p style={{ margin: 0 }}>Le statut sera mis à jour par notre équipe après vérification du paiement.</p>
                 </div>
               )}
             </div>
             <div className="modal-footer">
+              {paymentStep === 2 && <button className="btn btn-outline" onClick={() => setPaymentStep(1)}>Retour</button>}
               <button className="btn btn-outline" onClick={() => setPayModal(false)}>Annuler</button>
-              <button className="btn btn-gold" onClick={placeOrder} disabled={!payment || !phone || placing}
+              <button className="btn btn-gold" onClick={() => paymentStep === 1 ? setPaymentStep(2) : placeOrder()} disabled={!payment || !phone || placing}
                 style={{ opacity: !payment || !phone || placing ? 0.5 : 1 }}>
-                {placing ? "En cours..." : "✅ Confirmer le paiement"}
+                {placing ? "En cours..." : paymentStep === 1 ? "Continuer vers le paiement →" : "✅ Confirmer la commande"}
               </button>
             </div>
           </div>

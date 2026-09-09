@@ -47,22 +47,17 @@ export default function App() {
   // --- Init ---
   useEffect(() => {
     const token = api.getToken();
-    if (token) {
-      api
-        .me()
-        .then((userData) => {
-          setUser(userData);
-          setPage(userData.role === "admin" ? PAGES.DASHBOARD : PAGES.HOME);
-        })
-        .catch(() => api.setToken(null))
-        .finally(() => setLoading(false));
-    } else {
-      api
-        .getProducts()
-        .then(setProducts)
-        .catch(() => showToast("Impossible de charger les produits", "error"))
-        .finally(() => setLoading(false));
-    }
+    api.me()
+      .then((userData) => {
+        setUser(userData);
+        setPage(userData.role === "admin" ? PAGES.DASHBOARD : PAGES.HOME);
+      })
+      .catch(() => {
+        if (token) api.setToken(null);
+        return api.getProducts().then(setProducts);
+      })
+      .catch(() => showToast("Impossible de charger les produits", "error"))
+      .finally(() => setLoading(false));
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // --- Chargement données ---

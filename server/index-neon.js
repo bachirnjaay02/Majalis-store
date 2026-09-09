@@ -102,6 +102,17 @@ function publicProduct(product, req) {
   };
 }
 
+function readCookie(req, name) {
+  const cookies = req.headers.cookie?.split(";").map((cookie) => cookie.trim()) || [];
+  const value = cookies.find((cookie) => cookie.startsWith(`${name}=`));
+  return value ? decodeURIComponent(value.slice(name.length + 1)) : null;
+}
+
+function sessionCookie(token) {
+  const secure = process.env.NODE_ENV === "production";
+  return `majalis_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=${secure ? "None" : "Lax"}${secure ? "; Secure" : ""}; Max-Age=604800`;
+}
+
 async function publicOrder(order) {
   const { rows } = await query("SELECT product_id AS \"productId\", name, price, quantity AS qty, image FROM order_items WHERE order_id = $1", [order.dbId]);
   return { dbId: order.dbId, id: `CMD-${String(order.dbId).padStart(4, "0")}`, date: order.created_at, client: order.client, clientId: order.user_id, phone: order.phone, payment: order.payment, total: order.total, status: order.status, items: rows };
@@ -109,7 +120,8 @@ async function publicOrder(order) {
 
 async function findUserByToken(req) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
-  const userId = token && sessions.get(token);
+  const sessionToken = token || readCookie(req, "majalis_session");
+  const userId = sessionToken && sessions.get(sessionToken);
   if (!userId) return null;
   const { rows } = await query("SELECT * FROM users WHERE id = $1", [userId]);
   return rows[0] || null;
@@ -148,7 +160,7 @@ const app = express();
 
 const allowedOrigins = [
   "https://majalis-store.vercel.app",
-  "http://localhost:5173",
+  "http://localhost:5174",
   "http://localhost:3000"
 ];
 
@@ -175,7 +187,9 @@ app.post("/api/register", async (req, res, next) => {
   if (!name?.trim() || !email?.trim() || !password || password.length < 6) return res.status(422).json({ message: "Nom, email et mot de passe de 6 caractères minimum requis" });
   try {
     const { rows } = await query("INSERT INTO users (name, email, password_hash, phone) VALUES ($1, $2, $3, $4) RETURNING *", [name.trim(), email.trim().toLowerCase(), hashPassword(password), phone.trim()]);
-    res.status(201).json({ token: issueSession(rows[0]), user: publicUser(rows[0]) });
+    const token = issueSession(rows[0]);
+    res.setHeader("Set-Cookie", sessionCookie(token));
+    res.status(201).json({ user: publicUser(rows[0]) });
   } catch (error) {
     if (error.code === "23505") return res.status(409).json({ message: "Cet email est déjà utilisé" });
     next(error);
@@ -187,7 +201,9 @@ app.post("/api/login", async (req, res, next) => {
     const { rows } = await query("SELECT * FROM users WHERE email = $1", [req.body.email?.trim().toLowerCase()]);
     const user = rows[0];
     if (!user || !req.body.password || !verifyPassword(req.body.password, user.password_hash)) return res.status(401).json({ message: "Email ou mot de passe incorrect" });
-    res.json({ token: issueSession(user), user: publicUser(user) });
+    const token = issueSession(user);
+    res.setHeader("Set-Cookie", sessionCookie(token));
+    res.json({ user: publicUser(user) });
   } catch (error) {
     next(error);
   }
@@ -195,7 +211,9 @@ app.post("/api/login", async (req, res, next) => {
 
 app.post("/api/logout", requireAuth, (req, res) => {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "");
-  sessions.delete(token);
+  const sessionToken = token || readCookie(req, "majalis_session");
+  sessions.delete(sessionToken);
+  res.setHeader("Set-Cookie", "majalis_session=; Path=/; HttpOnly; Max-Age=0; SameSite=Lax");
   res.json({ message: "Déconnexion réussie" });
 });
 

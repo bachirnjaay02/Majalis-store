@@ -29,6 +29,7 @@ async function request(method, path, body = null) {
 
   let res;
   try {
+    options.credentials = 'include';
     res = await fetch(`${API_BASE}${path}`, options);
   } catch (error) {
     if (error.name === 'AbortError') {
